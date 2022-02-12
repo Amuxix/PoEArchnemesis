@@ -6,7 +6,6 @@ import java.awt.{Adjustable, Color, Dimension, FlowLayout, GraphicsConfiguration
 import javax.swing.{BorderFactory, BoxLayout, ImageIcon, JFrame, JLabel, JOptionPane, JPanel, JScrollBar, JScrollPane, ScrollPaneConstants, WindowConstants}
 import java.awt.event.{MouseEvent, MouseListener, WindowEvent, WindowFocusListener}
 import java.awt.geom.RoundRectangle2D
-import cats.effect.unsafe.implicits.global
 import org.bytedeco.librealsense.frame
 
 import java.awt.event.MouseAdapter
@@ -25,8 +24,6 @@ case class Window(position: (Int, Int), dimensions: (Int, Int), onHide: Window =
       if e.getX >= frame.getContentPane.getWidth || e.getX <= 0 || e.getY >= frame.getContentPane.getHeight || e.getY < 0 then
         hide()
   }
-
-
 
   private val frame = new JFrame("PoE Archnemesis Calculator")
   frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
@@ -76,11 +73,3 @@ case class Window(position: (Int, Int), dimensions: (Int, Int), onHide: Window =
   def show(): Unit = frame.setVisible(true)
 
   def repaint(): Unit = frame.repaint()
-
-/*  @main def frameTest =
-    addFrameStyle((900, 200), (300, 700))
-    add(Label(this, "test label\nsecond Line", () => ()))
-    add(Label(this, "Another", () => ()))
-    show()*/
-
-
