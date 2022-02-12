@@ -1,13 +1,13 @@
-package poe
+package poe.screenreader
 
-import java.awt.{Color, Robot}
-import cats.effect.IO
+import cats.effect.{IO, Ref}
 import cats.syntax.traverse.*
-import cats.effect.Ref
-import poe.ColorSquare.ColorSquare
+import poe.Clipboard
+import poe.screenreader.ColorSquare.ColorSquare
 
-import scala.concurrent.duration.*
 import java.awt.event.{InputEvent, KeyEvent}
+import java.awt.{Color, Robot}
+import scala.concurrent.duration.*
 import scala.util.Random
 
 object Bot:

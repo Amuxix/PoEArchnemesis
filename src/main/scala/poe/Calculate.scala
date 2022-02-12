@@ -1,7 +1,7 @@
 package poe
 
-import poe.Archnemesis.*
-import poe.Reward.*
+import poe.nemesis.Archnemesis.*
+import poe.nemesis.Reward.*
 
 object Calculate:
   extension[T] (xs: Iterable[T])

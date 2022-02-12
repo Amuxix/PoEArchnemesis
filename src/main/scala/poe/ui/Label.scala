@@ -1,11 +1,13 @@
-package poe
+package poe.ui
 
 import com.sun.java.swing.plaf.motif.MotifBorders.FocusBorder
+import poe.nemesis.Archnemesis
+import poe.{Configuration, Main}
 
-import java.awt.{Color, Font}
 import java.awt.event.{MouseEvent, MouseListener}
-import javax.swing.{BorderFactory, JLabel}
+import java.awt.{Color, Font}
 import javax.swing.border.Border
+import javax.swing.{BorderFactory, JLabel}
 
 case class Label(window: Window, nemesis: Archnemesis, amount: Int, set: Label => Unit, unset: Label => Unit) extends MouseListener:
   private val missing = if Main.mappingSet.contains(nemesis) then "" else " (Missing)"
@@ -15,7 +17,7 @@ case class Label(window: Window, nemesis: Archnemesis, amount: Int, set: Label =
   label.setBackground(new Color(0, 0, 0, 0))
   label.setForeground(Color.white)
   label.setToolTipText(Label.createTooltip(nemesis))
-  label.setFont(new Font("Fira Code Retina", Font.PLAIN, 20))
+  label.setFont(Main.config.window.font)
   label.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3))
   label.addMouseListener(this)
 
