@@ -5,11 +5,15 @@ import cats.syntax.traverse.*
 import cats.syntax.foldable.*
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent
 import cats.effect.unsafe.implicits.global
-import javax.swing.ToolTipManager
+import poe.nemesis.Archnemesis
+import poe.screenreader.{Bot, RecipeFinder}
+import poe.ui.{Label, Window}
 
+import javax.swing.ToolTipManager
 import java.awt.Color
 
 object Main extends IOApp.Simple:
+  val config: Configuration = Configuration.fromConfig()
   val FKeys = List(
     NativeKeyEvent.VC_F1,
     NativeKeyEvent.VC_F2,
@@ -46,7 +50,7 @@ object Main extends IOApp.Simple:
 
   def displayRecipes(window: Window, recipes: List[(Archnemesis, Int, Set[Archnemesis])]): Unit =
     recipes.foreach { case (nemesis, amount, ingredients) =>
-      window.add(Label(window, nemesis, amount, set(_, nemesis, ingredients), unset(_, nemesis, ingredients)))
+      window.add(ui.Label(window, nemesis, amount, set(_, nemesis, ingredients), unset(_, nemesis, ingredients)))
     }
     window.show()
     window.repaint()
@@ -78,14 +82,16 @@ object Main extends IOApp.Simple:
   override def run: IO[Unit] =
     for
       _ <- KeyListener.register
-      window = Window((900, 200), (450, 700), window => handleClose(window))
+      window = Window(config.window.position, config.window.dimensions, config.window.scrollSpeed, window => handleClose(window))
       _ <- IO(ToolTipManager.sharedInstance.setDismissDelay(Integer.MAX_VALUE))
-      _ <- KeyListener.keyMap.update(_ + (NativeKeyEvent.VC_J -> RecipeFinder.extractAll.flatMap(RecipeFinder.printGrid)))
-      _ <- KeyListener.keyMap.update(_ + (NativeKeyEvent.VC_L -> RecipeFinder.extractMappings))
-      _ <- KeyListener.keyMap.update(_ + (NativeKeyEvent.VC_B -> findRecipesAndDisplay(window)))
-      _ <- KeyListener.keyMap.update(_ + (NativeKeyEvent.VC_F3 -> findRecipesAndDisplay(window)))
-      _ <- KeyListener.keyMap.update(_ + (NativeKeyEvent.VC_F2 -> IO(window.show())))
-      _ <- KeyListener.keyMap.update(_ + (NativeKeyEvent.VC_ESCAPE -> IO(window.hide())))
+      _ <- KeyListener.keyMap.update(_ ++ Map(
+        NativeKeyEvent.VC_ESCAPE -> IO(window.hide()),
+        NativeKeyEvent.VC_F2 -> IO(window.show()),
+        NativeKeyEvent.VC_F3 -> findRecipesAndDisplay(window),
+        NativeKeyEvent.VC_F4 -> RecipeFinder.extractMappings,
+        NativeKeyEvent.VC_F5 -> RecipeFinder.extractAll.flatMap(RecipeFinder.printGrid),
+        NativeKeyEvent.VC_B -> findRecipesAndDisplay(window),
+      ))
       _ <- IO.println(s"Missing mapping for $missingMappings")
       _ <- IO.println(missingMappings.map(_.regex).grouped(10).map(_.mkString("^(", "|", ")")).mkString("\n"))
       _ <- IO.never

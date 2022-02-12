@@ -1,8 +1,9 @@
-package poe
+package poe.nemesis
 
-import poe.Archnemesis.Consecrator
-import poe.Reward.*
 import poe.Calculate.*
+import poe.nemesis.Reward.*
+import poe.nemesis.Archnemesis.*
+import poe.nemesis.{Reward, Special}
 
 enum Archnemesis(val rewards: List[Reward], val ingredients: List[Archnemesis], val regex: String):
   case Toxic extends Archnemesis(List(Generic, Gems), List.empty, "to")

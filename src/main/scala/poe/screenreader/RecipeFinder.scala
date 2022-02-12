@@ -1,11 +1,14 @@
-package poe
+package poe.screenreader
 
 import cats.effect.IO
 import cats.syntax.foldable.*
 import cats.syntax.traverse.*
-import poe.Archnemesis.*
-import poe.Bot
-import poe.ColorSquare.*
+import poe.Main
+import poe.screenreader.Bot
+import poe.nemesis.Archnemesis
+import poe.nemesis.Archnemesis.*
+import poe.screenreader.ColorSquare.*
+
 import java.awt.Color
 
 object RecipeFinder:
@@ -57,30 +60,25 @@ object RecipeFinder:
   )
 
   def findNemesis(square: ColorSquare): Option[Archnemesis] = mappings.collectFirst {
-    case (nemesisSquare, nemesis) if nemesisSquare.matches(square, 1) => nemesis
+    case (nemesisSquare, nemesis) if nemesisSquare.matches(square) => nemesis
   }
 
-  val startX = 190
-  val startY = 454
-  val columnSizes = List(73, 73, 73, 72, 73, 73, 73)
-  val lineSizes =   List(73, 73, 73, 73, 72, 73, 73)
-  val lineMap = List.range(0, 8).map(i => i -> lineSizes.take(i).sum).toMap
-  val columnMap = List.range(0, 8).map(i => i -> columnSizes.take(i).sum).toMap
+  private val lineMap = List.range(0, 8).map(i => i -> Main.config.reader.lineSizes.take(i).sum).toMap
+  private val columnMap = List.range(0, 8).map(i => i -> Main.config.reader.columnSizes.take(i).sum).toMap
 
-  @inline def squareAt(x: Int, y: Int, size: Int): IO[ColorSquare] = Bot.colorSquare(startX + lineMap(x), startY + columnMap(y), size)
+  @inline def squareAt(x: Int, y: Int, size: Int): IO[ColorSquare] =
+    val (startX, startY) = Main.config.reader.firstSquarePosition
+    Bot.colorSquare(startX + lineMap(x), startY + columnMap(y), size)
 
   def extract(n: Int, size: Int): IO[List[ColorSquare]] =
     List.tabulate(n)(i => squareAt(i % 8, i / 8, size)).sequence
-
-  val extractSize = 5
-  val parseSize = 2
 
   val extractMappings: IO[Unit] =
     val nemesis = List(
       Bonebreaker,
       Overcharged,
     )
-    extract(nemesis.size, extractSize).flatMap { extracted =>
+    extract(nemesis.size, Main.config.reader.extractSize).flatMap { extracted =>
       nemesis.zip(extracted).traverse_ {
         case (nemesis, colors) =>
           val colorText = colors.map(_.map(c => s"new Color(${c.getRGB})"))
@@ -88,7 +86,7 @@ object RecipeFinder:
       }
     }
 
-  val extractAll: IO[List[Option[Archnemesis]]] = extract(8*8, parseSize).map(_.map(findNemesis))
+  val extractAll: IO[List[Option[Archnemesis]]] = extract(8*8, Main.config.reader.parseSize).map(_.map(findNemesis))
 
   def printGrid(extracted: List[Option[Archnemesis]]): IO[Unit] =
     val parsed = extracted.map(_.fold("Match failed")(_.toString))

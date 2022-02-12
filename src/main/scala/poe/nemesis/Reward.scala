@@ -1,4 +1,4 @@
-package poe
+package poe.nemesis
 
 import java.awt.Robot
 
