@@ -20,9 +20,9 @@ object ColorSquare:
       if Main.config.reader.useSimilar then
         first.isSimilar(second)
       else
-        first.containsSlice(second)
+        first.measuresUpTo(second)
 
-    def containsSlice(second: ColorSquare): Boolean =
+    def measuresUpTo(second: ColorSquare): Boolean =
       first.exists(_.containsSlice(second.head))
 
     def isSimilar(second: ColorSquare): Boolean =
