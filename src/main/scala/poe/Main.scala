@@ -22,7 +22,7 @@ object Main extends IOApp.Simple:
   val config: Configuration = Configuration.fromConfig()
   var toCraft: Set[(Label, Archnemesis)] = Set.empty
   var toConsume: Set[(Label, Archnemesis)] = Set.empty
-  var toExtractMapping: Set[(Label, Archnemesis)] = Set.empty
+  var toExtractMapping: List[(Label, Archnemesis)] = List.empty
   var mappings: Map[ColorSquare, Archnemesis] = Map.empty
   def missingMappings: List[Archnemesis] = Archnemesis.values.toList.filter(n => !mappings.values.toSet.contains(n))
   var latestFullExtract: List[Option[Archnemesis]] = List.empty
@@ -38,7 +38,7 @@ object Main extends IOApp.Simple:
       toExtractMapping.foreach(_._1.resetColor)
 
   def setToExtract(label: Label, nemesis: Archnemesis): Boolean =
-    toExtractMapping += (label -> nemesis)
+    toExtractMapping :+= (label -> nemesis)
     label.text("e " + label.originalLabel)
     label.bold()
     if !missingMappings.contains(nemesis) then
@@ -47,7 +47,7 @@ object Main extends IOApp.Simple:
     true
 
   def unsetExtract(label: Label, nemesis: Archnemesis): Boolean =
-    toExtractMapping -= (label -> nemesis)
+    toExtractMapping = toExtractMapping.filter(_ != (label, nemesis))
     label.resetText
     label.unbold()
     updateIfImpossibleExtract(label)
@@ -149,7 +149,7 @@ object Main extends IOApp.Simple:
       _ <- IO(window.clear())
       _ = toConsume = Set.empty
       _ = toCraft = Set.empty
-      _ = toExtractMapping = Set.empty
+      _ = toExtractMapping = List.empty
       _ <- helpLabels(window).traverse_(label => IO(window.add(label)))
       _ <- IO(window.show())
       _ <- IO(window.repaint())
