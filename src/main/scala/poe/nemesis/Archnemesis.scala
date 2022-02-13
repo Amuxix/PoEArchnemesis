@@ -36,7 +36,7 @@ enum Archnemesis(val rewards: List[Reward], val ingredients: List[Archnemesis], 
   case HeraldingMinions extends Archnemesis(List(Fragments, Fragments), List(Dynamo, ArcaneBuffer), "her")
   case Assassin extends Archnemesis(List(Currency, Currency), List(Deadeye, Vampiric), "as")
   case Necromancer extends Archnemesis(List(Generic, Reroll2), List(Bombardier, Overcharged), "ne")
-  case Rejuvenating extends Archnemesis(List(Currency, Reroll1), List(Gargantuan, Vampiric), "re")
+  case Rejuvenating extends Archnemesis(List(Currency, Reroll1), List(Gargantuan, Vampiric), "rej")
   case Executioner extends Archnemesis(List(Legion, Breach), List(Frenzied, Berserker), "exe")
   case Hexer extends Archnemesis(List(Essences, Essences), List(Chaosweaver, Echoist), "hex")
   case DroughtBringer extends Archnemesis(List(Labyrinth, Labyrinth), List(Malediction, Deadeye), "dr")
@@ -72,10 +72,13 @@ enum Archnemesis(val rewards: List[Reward], val ingredients: List[Archnemesis], 
 
   lazy val name: String = toString.replaceAll("([a-z])([A-Z])", "$1 $2")
   lazy val ingredientFor: List[Archnemesis] = Archnemesis.values.filter(_.ingredients.contains(this)).toList
-  lazy val ingredientForBest: Set[Archnemesis] = ingredientFor match {
-    case List() => Set(this)
-    case ingredientFor => ingredientFor.flatMap(_.ingredientForBest).toSet
-  }
+  lazy val ingredientForBest: Set[Archnemesis] =
+    def inner(archnemesis: Archnemesis): Set[Archnemesis] =
+      archnemesis.ingredientFor match {
+        case List() => Set(archnemesis)
+        case ingredientFor => ingredientFor.flatMap(inner).toSet
+      }
+    inner(this) - this
   val baseIngredients: List[Archnemesis] = ingredients match
     case List() => List(this)
     case ingredients => ingredients.flatMap(_.allIngredients)

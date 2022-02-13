@@ -1,6 +1,9 @@
 package poe.ui
 
 import cats.effect.IO
+import poe.Main
+import poe.nemesis.Archnemesis
+import poe.screenreader.Bot
 
 import java.awt.event.*
 import java.awt.geom.RoundRectangle2D
@@ -21,7 +24,7 @@ case class Window(position: (Int, Int), dimensions: (Int, Int), scrollSpeed: Int
 
   private val mouseAdapter = new MouseAdapter() {
     override def mouseExited(e: MouseEvent): Unit =
-      if e.getX >= frame.getContentPane.getWidth || e.getX <= 0 || e.getY >= frame.getContentPane.getHeight || e.getY < 0 then
+      if e.getX >= panel.getWidth || e.getX <= 0 || e.getY >= panel.getHeight || e.getY < 0 then
         hide()
   }
 
@@ -30,7 +33,7 @@ case class Window(position: (Int, Int), dimensions: (Int, Int), scrollSpeed: Int
   frame.setUndecorated(true)
   frame.setBackground(new Color(0, 0, 0, 0))
   frame.setPreferredSize(new Dimension(dimensions._1, dimensions._2))
-  frame.setLocation(position._1, position._2)
+  frame.setLocation.tupled(position)
   frame.setShape(new RoundRectangle2D.Double(0, 0, dimensions._1, dimensions._2, 15, 15))
   frame.addWindowFocusListener(focusListener)
   frame.setAlwaysOnTop(true)
@@ -50,9 +53,8 @@ case class Window(position: (Int, Int), dimensions: (Int, Int), scrollSpeed: Int
   frame.add(scrollPane)
   panel.addMouseListener(mouseAdapter)
   panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS))
-  panel.setBackground(new Color(0, 34, 92, 120))
+  panel.setBackground(Main.config.window.backgroundColor)
   panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15))
-  //frame.add(panel)
   frame.pack()
 
   def add(label: Label): Unit = panel.add(label.label)
@@ -68,4 +70,6 @@ case class Window(position: (Int, Int), dimensions: (Int, Int), scrollSpeed: Int
 
   def show(): Unit = frame.setVisible(true)
 
-  def repaint(): Unit = frame.repaint()
+  def repaint(): Unit =
+    frame.revalidate()
+    frame.repaint()

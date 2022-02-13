@@ -33,4 +33,5 @@ libraryDependencies ++= Seq(
   "org.typelevel"         %% "cats-effect"         % "3.3.5",
   "com.github.kwhat"       % "jnativehook"         % "2.2.1",
   "com.github.pureconfig" %% "pureconfig-core"     % "0.17.1",
+  "org.bytedeco"           % "javacv-platform"     % "1.5.7",
 )
