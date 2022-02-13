@@ -1,10 +1,12 @@
 package poe
 
 import com.typesafe.config.{Config, ConfigFactory}
+import fs2.io.file.Path
 import pureconfig.*
 import pureconfig.generic.derivation.default.derived
 
 import java.awt.{Color, Font}
+import java.io.File
 
 case class Window(
   position: (Int, Int),
@@ -36,7 +38,9 @@ case class Mappings(
 case class Configuration(
   window: Window,
   reader: Reader,
-) derives ConfigReader
+  mappingsFileName: String,
+) derives ConfigReader:
+  val mappingsPath: Path = Path(mappingsFileName)
 
 object Configuration:
   def fromConfig(config: Config = ConfigFactory.load()): Configuration = ConfigSource.fromConfig(config).loadOrThrow[Configuration]

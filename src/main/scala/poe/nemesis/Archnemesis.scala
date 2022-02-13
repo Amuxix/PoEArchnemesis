@@ -1,5 +1,6 @@
 package poe.nemesis
 
+import io.circe.{Codec, Encoder}
 import poe.Calculate.*
 import poe.nemesis.Reward.*
 import poe.nemesis.Archnemesis.*
@@ -105,3 +106,6 @@ enum Archnemesis(val rewards: List[Reward], val ingredients: List[Archnemesis], 
     case List() => 1
     case ingredients => ingredients.sumBy(_.toCraft)
   }
+
+object Archnemesis:
+  given Codec[Archnemesis] = Codec.from(_.as[String].map(Archnemesis.valueOf), Encoder[String].contramap[Archnemesis](_.toString))
