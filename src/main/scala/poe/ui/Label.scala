@@ -15,7 +15,7 @@ case class Label(
   originalLabel: String,
   originalColor: Color = Color.white,
   tooltip: Option[String] = None,
-  onClick: Label => Boolean = _ => false,
+  onClick: (Label, MouseEvent) => Boolean = (_, _) => false,
 ) extends MouseListener:
   val label = new JLabel(originalLabel) {
     override def createToolTip(): JToolTip =
@@ -51,7 +51,7 @@ case class Label(
   def resetColor: Unit = color(originalColor)
 
   override def mouseClicked(e: MouseEvent): Unit =
-    _clicked = onClick(this)
+    _clicked = onClick(this, e)
     repaint()
 
   def text: String = label.getText
@@ -75,6 +75,7 @@ object Label:
   val noCraftOrConsumeColor = Color.lightGray
   val canCraftColor = Color.orange
   val canConsumeColor = Color.white
+  val canExtractMapping = Color.green
 
   extension (string: String)
     def padLeftTo(len: Int, elem: Char): String =
@@ -136,6 +137,8 @@ object Label:
     val gotten = extracted.contains(nemesis)
     if !canCraft && !gotten then
       noCraftOrConsumeColor
+    else if canCraft && Main.missingMappings.contains(nemesis) then
+      canExtractMapping
     else if canCraft then
       canCraftColor
     else
@@ -146,7 +149,7 @@ object Label:
     nemesis: Archnemesis,
     extracted: Map[Archnemesis, Int],
     existingMappings: Set[Archnemesis],
-    onClick: Label => Boolean,
+    onClick: (Label, MouseEvent) => Boolean,
   ): Label =
     Label(
       () => window.repaint(),

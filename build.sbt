@@ -29,9 +29,14 @@ scalacOptions ++= Seq(
 )
 // format: on
 
+val circeVersion = "0.14.1"
+val fs2Version = "3.2.4"
 libraryDependencies ++= Seq(
   "org.typelevel"         %% "cats-effect"         % "3.3.5",
   "com.github.kwhat"       % "jnativehook"         % "2.2.1",
   "com.github.pureconfig" %% "pureconfig-core"     % "0.17.1",
-  "org.bytedeco"           % "javacv-platform"     % "1.5.7",
+  "io.circe"             %% "circe-core"           % circeVersion,
+  "io.circe"             %% "circe-parser"         % circeVersion,
+  "co.fs2"               %% "fs2-core"             % fs2Version,
+  "co.fs2"               %% "fs2-io"               % fs2Version,
 )
