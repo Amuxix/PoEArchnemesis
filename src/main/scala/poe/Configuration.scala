@@ -4,7 +4,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import pureconfig.*
 import pureconfig.generic.derivation.default.derived
 
-import java.awt.Font
+import java.awt.{Color, Font}
 
 case class Window(
   position: (Int, Int),
@@ -12,7 +12,11 @@ case class Window(
   scrollSpeed: Int,
   fontName: String,
   fontSize: Int,
+  backgroundColorRgba: (Int, Int, Int, Int),
 ) derives ConfigReader:
+  val backgroundColor: Color =
+    val (r, g, b, a) = backgroundColorRgba
+    new Color(r, g, b, a)
   val font: Font = new Font(fontName, Font.PLAIN, fontSize)
 
 case class Reader(

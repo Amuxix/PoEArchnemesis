@@ -11,7 +11,7 @@ import poe.screenreader.ColorSquare.*
 
 import java.awt.Color
 
-object RecipeFinder:
+object Extractor:
   val mappings: Map[ColorSquare, Archnemesis] = Map(
     List(List(new Color(-15064035), new Color(-11770086), new Color(-13085160), new Color(-16052452), new Color(-16448227)), List(new Color(-15786724), new Color(-16513763), new Color(-15657188), new Color(-13878762), new Color(-14932710)), List(new Color(-15854306), new Color(-16447714), new Color(-14866665), new Color(-13879785), new Color(-16184292)), List(new Color(-15590626), new Color(-11633900), new Color(-14864874), new Color(-16645603), new Color(-16579556)), List(new Color(-13810921), new Color(-7678715), new Color(-16118247), new Color(-16645604), new Color(-14602726))) -> Toxic,
     List(List(new Color(-5996859), new Color(-5475648), new Color(-8566370), new Color(-10408562), new Color(-11723635)), List(new Color(-6329141), new Color(-3178762), new Color(-6924104), new Color(-8898398), new Color(-3709199)), List(new Color(-8763732), new Color(-9290337), new Color(-8827996), new Color(-11128700), new Color(-4954416)), List(new Color(-4689438), new Color(-11720832), new Color(-7643477), new Color(-6265906), new Color(-7845939)), List(new Color(-1003531), new Color(-2845700), new Color(-7448640), new Color(-7647815), new Color(-8702252))) -> Chaosweaver,
@@ -57,6 +57,8 @@ object RecipeFinder:
     List(List(new Color(-12897246), new Color(-12371670), new Color(-13235963), new Color(-12369866), new Color(-8818337)), List(new Color(-9808334), new Color(-12372438), new Color(-12833506), new Color(-7308191), new Color(-7766417)), List(new Color(-15134201), new Color(-15988988), new Color(-13491694), new Color(-9083837), new Color(-8687786)), List(new Color(-14476265), new Color(-15990271), new Color(-12581886), new Color(-12372700), new Color(-8095907)), List(new Color(-11583961), new Color(-14146020), new Color(-9624550), new Color(-12179174), new Color(-12831451))) -> Bonebreaker,
     List(List(new Color(-9882085), new Color(-7058410), new Color(-7647723), new Color(-6524911), new Color(-4549108)), List(new Color(-10669799), new Color(-7453165), new Color(-8042477), new Color(-5143279), new Color(-2969327)), List(new Color(-5340873), new Color(-3305930), new Color(-5208528), new Color(-3559882), new Color(-2242758)), List(new Color(-4684487), new Color(-2974663), new Color(-3039430), new Color(-2512073), new Color(-2508492)), List(new Color(-8964330), new Color(-6796271), new Color(-8303597), new Color(-6784751), new Color(-4677876))) -> Bombardier,
     List(List(new Color(-13885407), new Color(-13291735), new Color(-11057878), new Color(-10204125), new Color(-12045290)), List(new Color(-14803677), new Color(-15004150), new Color(-10531549), new Color(-5075131), new Color(-9416925)), List(new Color(-12307681), new Color(-10333897), new Color(-10006487), new Color(-9613019), new Color(-8822468)), List(new Color(-10661843), new Color(-3618624), new Color(-5658716), new Color(-8427204), new Color(-6719692)), List(new Color(-10796250), new Color(-9674681), new Color(-7897502), new Color(-7110055), new Color(-6517916))) -> Opulent,
+    List(List(new Color(-3272688), new Color(-2552307), new Color(-7122100), new Color(-7958397), new Color(-5064275)), List(new Color(-6874870), new Color(-4587003), new Color(-1025232), new Color(-2967967), new Color(-8288903)), List(new Color(-6530019), new Color(-4109279), new Color(-690592), new Color(-332587), new Color(-4076353)), List(new Color(-2983886), new Color(-1073346), new Color(-5258402), new Color(-4066397), new Color(-4408169)), List(new Color(-10006766), new Color(-9818105), new Color(-7111408), new Color(-8351194), new Color(-6712940))) -> MagmaBarrier,
+    List(List(new Color(-14908805), new Color(-15176085), new Color(-11049372), new Color(-7171446), new Color(-4342868)), List(new Color(-14780298), new Color(-14917278), new Color(-15048351), new Color(-13471631), new Color(-7368567)), List(new Color(-14063514), new Color(-15505044), new Color(-14649995), new Color(-14716562), new Color(-14717589)), List(new Color(-12220539), new Color(-15703451), new Color(-14648454), new Color(-14716048), new Color(-14261407)), List(new Color(-13597569), new Color(-14390164), new Color(-15243931), new Color(-13800851), new Color(-5791588))) -> SoulEater,
   )
 
   def findNemesis(square: ColorSquare): Option[Archnemesis] = mappings.collectFirst {
@@ -75,8 +77,8 @@ object RecipeFinder:
 
   val extractMappings: IO[Unit] =
     val nemesis = List(
-      Bonebreaker,
-      Overcharged,
+      MagmaBarrier,
+      SoulEater,
     )
     extract(nemesis.size, Main.config.reader.extractSize).flatMap { extracted =>
       nemesis.zip(extracted).traverse_ {
@@ -89,19 +91,5 @@ object RecipeFinder:
   val extractAll: IO[List[Option[Archnemesis]]] = extract(8*8, Main.config.reader.parseSize).map(_.map(findNemesis))
 
   def printGrid(extracted: List[Option[Archnemesis]]): IO[Unit] =
-    val parsed = extracted.map(_.fold("Match failed")(_.toString))
+    val parsed = extracted.map(_.fold("")(_.toString))
     IO.println(parsed.grouped(8).toList.map(_.map(_.padTo(18, ' ')).mkString(" ")).mkString("\n"))
-
-  def findRecipes(extracted: List[Option[Archnemesis]]): List[(Archnemesis, Int, Set[Archnemesis])] =
-    val flattened = extracted.flatten
-    val ingredientMap = Archnemesis.values.map { nemesis =>
-      nemesis -> nemesis.ingredients.toSet
-    }.toList
-    val nemesisSet = flattened.toSet
-    val (notGotten, gotten) = ingredientMap.collect {
-      case (nemesis, ingredients) if ingredients.nonEmpty && ingredients.subsetOf(nemesisSet) =>
-        (nemesis, flattened.count(_ == nemesis), ingredients)
-    }
-      .sortBy(_._1.roundedReward)(Ordering[Double].reverse)
-      .partition(_._2 == 0)
-    notGotten ++ gotten
