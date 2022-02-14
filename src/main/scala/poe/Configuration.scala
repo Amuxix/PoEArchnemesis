@@ -44,9 +44,7 @@ case class Configuration(
   window: Window,
   reader: Reader,
   keys: Keys,
-  mappingsFileName: String,
-) derives ConfigReader:
-  val mappingsPath: Path = Path(mappingsFileName)
+) derives ConfigReader
 
 object Configuration:
   def fromConfig(config: Config = ConfigFactory.load()): Configuration = ConfigSource.fromConfig(config).loadOrThrow[Configuration]
