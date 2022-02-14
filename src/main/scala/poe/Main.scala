@@ -93,7 +93,7 @@ object Main extends IOApp.Simple:
 
 
   def handleClick(label: Label, event: MouseEvent, nemesis: Archnemesis, gotten: Boolean, canCraft: Boolean): Boolean =
-    if event.getButton == InputEvent.BUTTON1_DOWN_MASK then
+    if event.getButton == MouseEvent.BUTTON1 then
       val isSetToCraft = toCraft.contains((label, nemesis))
       val isSetToConsume = toConsume.contains((label, nemesis))
       (gotten, isSetToConsume, canCraft, isSetToCraft) match {
@@ -116,32 +116,39 @@ object Main extends IOApp.Simple:
       Bot.search(search).unsafeRunAndForget()
     if toExtractMapping.nonEmpty && !impossibleExtraction then
       (for
-        newMappings <- Extractor.extractMappings(toExtractMapping.map(_._2).toList)
+        newMappings <- Extractor.extractMappings(toExtractMapping.map(_._2))
         _ = mappings ++= newMappings
         _ <- Persistence.saveFile(config.mappingsPath, mappings.toList)
       yield ()).unsafeRunSync()
 
-  private def createHTML(text: String): String = s"<html>&nbsp&nbsp $text</html>"
+  private def createHTML(text: String): String = s"<html>&nbsp $text</html>"
 
   def helpLabels(window: Window): List[Label] = List(
-    Label(window.repaint, "Extracting Archnemesis..."),
-    Label(window.repaint, " "),
     Label(window.repaint, "Quick Help:"),
     Label(window.repaint, createHTML("Grey   - Can't craft or use"), Label.noCraftOrConsumeColor),
     Label(window.repaint, createHTML("Orange - Can be crafted"), Label.canCraftColor),
     Label(window.repaint, createHTML("Green  - Can craft and extract mapping"), Label.canExtractMapping),
     Label(window.repaint, createHTML("White  - Can't craft, only use"), Label.canConsumeColor),
-    Label(window.repaint, createHTML("Red    - Can't use that combo"), Color.red),
+    Label(window.repaint, createHTML("Red    - Can't use that combo or extract"), Color.red),
     Label(window.repaint, createHTML("[x] - Uses x ingredients")),
     Label(window.repaint, createHTML("(M) - Mapping is missing")),
     Label(window.repaint, createHTML("<u>u</u> Name - Marked to be used")),
     Label(window.repaint, createHTML("<u>c</u> Name - Marked to be crafted")),
+    Label(window.repaint, createHTML("<u>e</u> Name - Marked to extract mapping")),
     Label(window.repaint, " "),
     Label(window.repaint, "Keys:"),
-    Label(window.repaint, createHTML("Esc - Close window")),
-    Label(window.repaint, createHTML("F2  - Reopen window")),
-    Label(window.repaint, createHTML("F3  - Show available recipes")),
+    Label(window.repaint, createHTML(s"${config.keys.closeWindow} - Close window")),
+    Label(window.repaint, createHTML(s"${config.keys.showHelp}  - Show this help")),
+    Label(window.repaint, createHTML(s"${config.keys.reopen}  - Reopen window")),
+    Label(window.repaint, createHTML(s"${config.keys.openAndParse}  - Show available recipes")),
   )
+
+  def showHelp(window: Window): IO[Unit] =
+    for
+      _ <- helpLabels(window).traverse_(label => IO(window.add(label)))
+      _ <- IO(window.show())
+      _ <- IO(window.repaint())
+    yield ()
 
   private val sortedNemesis = Archnemesis.values.toList.sortBy(_.reward)(Ordering[Double].reverse)
   def showArchNemesis(window: Window): IO[Unit] =
@@ -150,9 +157,9 @@ object Main extends IOApp.Simple:
       _ = toConsume = Set.empty
       _ = toCraft = Set.empty
       _ = toExtractMapping = List.empty
-      _ <- helpLabels(window).traverse_(label => IO(window.add(label)))
-      _ <- IO(window.show())
-      _ <- IO(window.repaint())
+      _ <- IO(window.add(Label(window.repaint, "Extracting Archnemesis...")))
+      _ <- IO(window.add(Label(window.repaint, " ")))
+      _ <- showHelp(window)
       extracted <- Extractor.extractAll.map(_.flatten)
       extractedSet = extracted.toSet
       extractedMap = extracted.groupBy(identity).view.mapValues(_.size).toMap
@@ -178,9 +185,10 @@ object Main extends IOApp.Simple:
       window = Window(config.window.position, config.window.dimensions, config.window.scrollSpeed, window => handleClose(window))
       _ <- IO(ToolTipManager.sharedInstance.setDismissDelay(Integer.MAX_VALUE))
       _ <- KeyListener.keyMap.update(_ ++ Map(
-        NativeKeyEvent.VC_ESCAPE -> IO(window.hide()),
-        NativeKeyEvent.VC_F2 -> IO(window.show()),
-        NativeKeyEvent.VC_F3 -> showArchNemesis(window),
+        config.keys.closeWindowKey -> IO(window.hide()),
+        config.keys.showHelpKey -> IO(window.clear()) *> showHelp(window),
+        config.keys.reopenKey -> IO(window.show()),
+        config.keys.openAndParseKey -> showArchNemesis(window),
         NativeKeyEvent.VC_F5 -> Extractor.extractAll.flatMap(Extractor.printGrid),
       ))
       _ <- IO.println(s"Missing mapping for $missingMappings")

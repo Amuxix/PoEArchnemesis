@@ -27,17 +27,23 @@ case class Reader(
   parseSize: Int,
   columnSizes: List[Int],
   lineSizes: List[Int],
-  useSimilar: Boolean,
-  minSimilarity: Int,
 ) derives ConfigReader
 
-case class Mappings(
-  mappings: List[List[Int]],
-) derives ConfigReader
+case class Keys(
+  closeWindow: String,
+  showHelp: String,
+  reopen: String,
+  openAndParse: String,
+) derives ConfigReader:
+  lazy val closeWindowKey: Int = KeyConverter.findKey(closeWindow)
+  lazy val showHelpKey: Int = KeyConverter.findKey(showHelp)
+  lazy val openAndParseKey: Int = KeyConverter.findKey(openAndParse)
+  lazy val reopenKey: Int = KeyConverter.findKey(reopen)
 
 case class Configuration(
   window: Window,
   reader: Reader,
+  keys: Keys,
   mappingsFileName: String,
 ) derives ConfigReader:
   val mappingsPath: Path = Path(mappingsFileName)
