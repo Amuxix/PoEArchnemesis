@@ -5,6 +5,7 @@ import cats.syntax.traverse.*
 import cats.syntax.foldable.*
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent
 import cats.effect.unsafe.implicits.global
+import fs2.io.file.Path
 import io.circe.{Codec, Encoder}
 import poe.nemesis.Archnemesis
 import poe.screenreader.ColorSquare.ColorSquare
@@ -15,11 +16,12 @@ import javax.swing.{JLabel, ToolTipManager}
 import java.awt.Color
 import java.awt.Font
 import java.awt.GraphicsEnvironment
-import java.awt.event.{MouseEvent, InputEvent}
+import java.awt.event.{InputEvent, MouseEvent}
 import java.io.File
 
 object Main extends IOApp.Simple:
   val config: Configuration = Configuration.fromConfig()
+  val mappingsPath: Path = Path("../conf/mappings.json")
   var toCraft: Set[(Label, Archnemesis)] = Set.empty
   var toConsume: Set[(Label, Archnemesis)] = Set.empty
   var toExtractMapping: List[(Label, Archnemesis)] = List.empty
@@ -118,7 +120,7 @@ object Main extends IOApp.Simple:
       (for
         newMappings <- Extractor.extractMappings(toExtractMapping.map(_._2))
         _ = mappings ++= newMappings
-        _ <- Persistence.saveFile(config.mappingsPath, mappings.toList)
+        _ <- Persistence.saveFile(mappingsPath, mappings.toList)
       yield ()).unsafeRunSync()
 
   private def createHTML(text: String): String = s"<html>&nbsp $text</html>"
@@ -179,7 +181,7 @@ object Main extends IOApp.Simple:
 
   override def run: IO[Unit] =
     for
-      mappings <- Persistence.loadFile[List[(ColorSquare, Archnemesis)]](config.mappingsPath, (_, _) => IO.unit)
+      mappings <- Persistence.loadFile[List[(ColorSquare, Archnemesis)]](mappingsPath, (_, _) => IO.unit)
       _ = mappings.foreach(mappings => Main.mappings = mappings.toMap)
       _ <- KeyListener.register
       window = Window(config.window.position, config.window.dimensions, config.window.scrollSpeed, window => handleClose(window))

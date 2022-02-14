@@ -1,7 +1,6 @@
-name := "PoE"
-version := "0.2"
+ThisBuild / name := "PoE"
 
-scalaVersion := "3.1.1"
+ThisBuild / scalaVersion := "3.1.1"
 // format: off
 javacOptions ++= Seq("-Xlint", "-encoding", "UTF-8")
 scalacOptions ++= Seq(
@@ -40,3 +39,11 @@ libraryDependencies ++= Seq(
   "co.fs2"               %% "fs2-core"             % fs2Version,
   "co.fs2"               %% "fs2-io"               % fs2Version,
 )
+
+enablePlugins(JavaAppPackaging)
+
+//Native packager settings
+Universal / javaOptions += "-Dconfig.file=../conf/application.conf"
+Universal / mappings += file("mappings.json") -> "mappings.json"
+Universal / packageName := name.value
+Universal / topLevelDirectory := None
