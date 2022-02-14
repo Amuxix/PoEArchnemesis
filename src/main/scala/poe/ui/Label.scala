@@ -129,8 +129,8 @@ object Label:
     val mappingMissing = if existingMappings.contains(nemesis) then "" else " (M)"
     val amount = extracted.getOrElse(nemesis, 0)
     val amountText = if amount == 0 then "" else s" (Got $amount)"
-    val ingredients = if nemesis.ingredients.isEmpty then "" else s" [${nemesis.ingredients.size}]"
-    s"${nemesis.name.padTo(18, ' ')}$ingredients$amountText$mappingMissing"
+    val ingredients = if nemesis.ingredients.isEmpty then "" else s"[${nemesis.ingredients.size}]"
+    s"${nemesis.name.padTo(18, ' ')}${ingredients.padLeftTo(4, ' ')}$amountText$mappingMissing"
 
   private def getColor(nemesis: Archnemesis, extracted: Map[Archnemesis, Int]): Color =
     val canCraft = nemesis.tier > 0 && nemesis.ingredients.forall(extracted.contains)
