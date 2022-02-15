@@ -6,7 +6,8 @@ import poe.Clipboard
 import poe.screenreader.ColorSquare.ColorSquare
 
 import java.awt.event.{InputEvent, KeyEvent}
-import java.awt.{Color, Robot}
+import java.awt.image.BufferedImage
+import java.awt.{Color, Rectangle, Robot}
 import scala.concurrent.duration.*
 import scala.util.Random
 
@@ -68,6 +69,10 @@ object Bot:
     yield ()
 
   def color(x: Int, y: Int): IO[Color] = IO(robot.getPixelColor(x, y))
+  
+  def screenCapture(x: Int, y: Int, height: Int, width: Int): IO[BufferedImage] =
+    val rectangle = new Rectangle(x, y, height, width)
+    IO(robot.createScreenCapture(rectangle))
 
   def colorSquare(x: Int, y: Int, size: Int): IO[ColorSquare] =
     val half = size / 2D
