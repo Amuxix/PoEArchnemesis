@@ -13,11 +13,11 @@ import java.awt.Color
 
 object Extractor:
   def findNemesis(square: ColorSquare): Option[Archnemesis] = Main.mappings.collectFirst {
-    case (nemesisSquare, nemesis) if nemesisSquare.matches(square) => nemesis
+    case (nemesis, nemesisSquare) if nemesisSquare.matches(square) => nemesis
   }
 
-  private val lineMap = List.range(0, 8).map(i => i -> Main.config.reader.lineSizes.take(i).sum).toMap
-  private val columnMap = List.range(0, 8).map(i => i -> Main.config.reader.columnSizes.take(i).sum).toMap
+  private lazy val lineMap = List.range(0, 8).map(i => i -> Main.config.reader.lineSizes.take(i).sum).toMap
+  private lazy val columnMap = List.range(0, 8).map(i => i -> Main.config.reader.columnSizes.take(i).sum).toMap
 
   @inline def squareAt(x: Int, y: Int, size: Int): IO[ColorSquare] =
     val (startX, startY) = Main.config.reader.firstSquarePosition
@@ -26,8 +26,8 @@ object Extractor:
   def extract(n: Int, size: Int): IO[List[ColorSquare]] =
     List.tabulate(n)(i => squareAt(i % 8, i / 8, size)).sequence
 
-  def extractMappings(nemesis: List[Archnemesis]): IO[List[(ColorSquare, Archnemesis)]] =
-    extract(nemesis.size, Main.config.reader.extractSize).map(_.zip(nemesis))
+  def extractMappings(nemesis: List[Archnemesis]): IO[List[(Archnemesis, ColorSquare)]] =
+    extract(nemesis.size, Main.config.reader.extractSize).map(nemesis.zip)
 
   val extractAll: IO[List[Option[Archnemesis]]] = extract(8*8, Main.config.reader.parseSize)
     .map { colorSquares =>

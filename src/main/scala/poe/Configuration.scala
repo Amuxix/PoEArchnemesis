@@ -15,6 +15,7 @@ case class Window(
   fontName: String,
   fontSize: Int,
   backgroundColorRgba: (Int, Int, Int, Int),
+  searchOnClose: Boolean,
 ) derives ConfigReader:
   val backgroundColor: Color =
     val (r, g, b, a) = backgroundColorRgba
