@@ -1,6 +1,6 @@
 import NativePackagerHelper._
 
-ThisBuild / name := "PoE"
+ThisBuild / name := "PoEArchnemesis"
 
 ThisBuild / scalaVersion := "3.1.1"
 // format: off
