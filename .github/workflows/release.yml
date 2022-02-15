@@ -23,18 +23,6 @@ jobs:
           distribution: temurin
           java-version: 11
 
-      - name: Cache sbt
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.sbt
-            ~/.ivy2/cache
-            ~/.coursier/cache/v1
-            ~/.cache/coursier/v1
-            ~/AppData/Local/Coursier/Cache/v1
-            ~/Library/Caches/Coursier/v1
-          key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
-
       - name: Build project
         run: 'sbt universal:packageBin'
 
@@ -48,4 +36,4 @@ jobs:
           name: ${{ github.event.release.name }}
           tag: ${{ github.event.release.tag_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: '/home/runner/work/PoEArchnemesis/PoEArchnemesis/target/universal/poe.zip'
+          artifacts: './PoEArchnemesis/target/universal/poe.zip'

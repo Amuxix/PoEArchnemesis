@@ -20,17 +20,17 @@ import java.awt.event.{InputEvent, MouseEvent}
 import java.io.File
 
 object Main extends IOApp.Simple:
-  val config: Configuration = Configuration.fromConfig()
+  lazy val config: Configuration = Configuration.fromConfig()
   val mappingsPath: Path = Path("../conf/mappings.json")
   var toCraft: Set[(Label, Archnemesis)] = Set.empty
   var toConsume: Set[(Label, Archnemesis)] = Set.empty
   var toExtractMapping: List[(Label, Archnemesis)] = List.empty
-  var mappings: Map[ColorSquare, Archnemesis] = Map.empty
-  def missingMappings: List[Archnemesis] = Archnemesis.values.toList.filter(n => !mappings.values.toSet.contains(n))
+  var mappings: Map[Archnemesis, ColorSquare] = Map.empty
+  def missingMappings: List[Archnemesis] = Archnemesis.values.toList.filter(n => !mappings.keySet.contains(n))
   var latestFullExtract: List[Option[Archnemesis]] = List.empty
-  def emptyMappingsAtStart: Int = latestFullExtract.takeWhile(_.isEmpty).size
+  def failedMatchesAtStart: Int = latestFullExtract.takeWhile(_.isEmpty).size
 
-  def impossibleExtraction: Boolean = toExtractMapping.size > emptyMappingsAtStart
+  def impossibleExtraction: Boolean = toExtractMapping.size > failedMatchesAtStart
   
   def updateIfImpossibleExtract(label: Label): Unit =
     label.resetColor
@@ -43,16 +43,16 @@ object Main extends IOApp.Simple:
     toExtractMapping :+= (label -> nemesis)
     label.text("e " + label.originalLabel)
     label.bold()
+    //updateIfImpossibleExtract(label)
     if !missingMappings.contains(nemesis) then
-      label.color(Color.red)
-    updateIfImpossibleExtract(label)
+      label.color(Color.yellow)
     true
 
   def unsetExtract(label: Label, nemesis: Archnemesis): Boolean =
     toExtractMapping = toExtractMapping.filter(_ != (label, nemesis))
     label.resetText
     label.unbold()
-    updateIfImpossibleExtract(label)
+    //updateIfImpossibleExtract(label)
     false
 
   def impossibleSelection(toCraft: Set[(Label, Archnemesis)] = toCraft, toConsume: Set[(Label, Archnemesis)] = toConsume): Boolean =
@@ -93,7 +93,6 @@ object Main extends IOApp.Simple:
     updateIfImpossible(label)
     false
 
-
   def handleClick(label: Label, event: MouseEvent, nemesis: Archnemesis, gotten: Boolean, canCraft: Boolean): Boolean =
     if event.getButton == MouseEvent.BUTTON1 then
       val isSetToCraft = toCraft.contains((label, nemesis))
@@ -106,16 +105,18 @@ object Main extends IOApp.Simple:
         case (_, _, true, false) => setToCraft(label, nemesis)
         case _ => setToConsume(label, nemesis)
       }
-    else
+    else if event.getButton == MouseEvent.BUTTON3 && event.isControlDown then
       if toExtractMapping.contains((label, nemesis)) then
         unsetExtract(label, nemesis)
       else
         setToExtract(label, nemesis)
+    else
+      false
 
   def handleClose(window: Window): Unit =
     if toCraft.nonEmpty || toConsume.nonEmpty then
       val search = (toCraft.flatMap(_._2.ingredients) ++ toConsume.map(_._2)).map(_.regex).mkString("^(", "|", ")")
-      Bot.search(search).unsafeRunAndForget()
+      if config.window.searchOnClose then Bot.search(search).unsafeRunAndForget()
     if toExtractMapping.nonEmpty && !impossibleExtraction then
       (for
         newMappings <- Extractor.extractMappings(toExtractMapping.map(_._2))
@@ -165,15 +166,15 @@ object Main extends IOApp.Simple:
       extracted <- Extractor.extractAll.map(_.flatten)
       extractedSet = extracted.toSet
       extractedMap = extracted.groupBy(identity).view.mapValues(_.size).toMap
-      addToWindow = sortedNemesis.traverse_ { nemesis =>
+      (craftable, nonCraftable) = sortedNemesis.map { nemesis =>
         val ingredients = nemesis.ingredients.toSet
         val canCraft = ingredients.nonEmpty && ingredients.subsetOf(extractedSet)
         val onClick = handleClick(_, _, nemesis, extractedMap.contains(nemesis), canCraft)
-        IO(window.add(Label(window, nemesis, extractedMap, mappings.values.toSet, onClick)))
+        canCraft -> IO(window.add(Label(window, nemesis, extractedMap, mappings.keySet, onClick)))
       }
+        .partition(_._1)
       _ <- IO(window.clear())
-      _ <- addToWindow
-      //_ <- IO(window.show())
+      _ <- (craftable ++ nonCraftable).traverse_(_._2)
       _ <- IO(window.repaint())
     yield ()
 
@@ -181,7 +182,7 @@ object Main extends IOApp.Simple:
 
   override def run: IO[Unit] =
     for
-      mappings <- Persistence.loadFile[List[(ColorSquare, Archnemesis)]](mappingsPath, (_, _) => IO.unit)
+      mappings <- Persistence.loadFile[List[(Archnemesis, ColorSquare)]](mappingsPath)
       _ = mappings.foreach(mappings => Main.mappings = mappings.toMap)
       _ <- KeyListener.register
       window = Window(config.window.position, config.window.dimensions, config.window.scrollSpeed, window => handleClose(window))
@@ -197,3 +198,9 @@ object Main extends IOApp.Simple:
       _ <- IO.println(missingMappings.map(_.regex).grouped(10).map(_.mkString("^(", "|", ")")).mkString("\n"))
       _ <- IO.never
     yield ()
+
+  /*override def run: IO[Unit] =
+    for
+      mappings <- Persistence.loadAndMerge[(Archnemesis, ColorSquare)](List("mappings.json", "merge.json").map(Path(_)))
+      _ <- Persistence.saveFile(Path("mappings.json"), mappings.distinctBy(_._1))
+    yield ()*/

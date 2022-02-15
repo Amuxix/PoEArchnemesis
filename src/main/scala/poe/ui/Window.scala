@@ -16,6 +16,7 @@ import javax.swing.*
 */
 case class Window(position: (Int, Int), dimensions: (Int, Int), scrollSpeed: Int, onHide: Window => Unit):
   window =>
+  var open = false
   private val focusListener = new WindowFocusListener {
     override def windowGainedFocus(e: WindowEvent): Unit = ()
 
@@ -65,10 +66,13 @@ case class Window(position: (Int, Int), dimensions: (Int, Int), scrollSpeed: Int
     frame.repaint()
 
   def hide(): Unit =
-    onHide(window)
+    if open then onHide(window)
+    open = false
     frame.setVisible(false)
 
-  def show(): Unit = frame.setVisible(true)
+  def show(): Unit =
+    open = true
+    frame.setVisible(true)
 
   def repaint(): Unit =
     frame.revalidate()

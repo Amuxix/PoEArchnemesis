@@ -1,3 +1,5 @@
+import NativePackagerHelper._
+
 ThisBuild / name := "PoE"
 
 ThisBuild / scalaVersion := "3.1.1"
@@ -45,5 +47,8 @@ enablePlugins(JavaAppPackaging)
 //Native packager settings
 Universal / javaOptions += "-Dconfig.file=../conf/application.conf"
 Universal / mappings += file("mappings.json") -> "mappings.json"
+Universal / mappings ++= contentOf(sourceDirectory.value / "main" / "resources").map { case (source, target) =>
+  source -> s"conf/$target"
+}
 Universal / packageName := name.value
 Universal / topLevelDirectory := None

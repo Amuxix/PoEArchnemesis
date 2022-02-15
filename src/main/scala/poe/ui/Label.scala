@@ -95,7 +95,8 @@ object Label:
   private def nemesisWithColorAndAmount(nemesis: Archnemesis, extracted: Map[Archnemesis, Int]): String =
     val amount = extracted.getOrElse(nemesis, 0)
     val amountText = if amount == 0 then "" else s"(Got $amount)"
-    s"""<tr style="color:${getColor(nemesis, extracted).hexCode};margin-left: 15px;margin-bottom: 3px"><td>${nemesis.name}</td><td>$amountText</td></tr>"""
+    val ingredients = if nemesis.ingredients.isEmpty then "" else s"[${nemesis.ingredients.size}]"
+    s"""<tr style="color:${getColor(nemesis, extracted).hexCode};margin-left: 15px;margin-bottom: 3px"><td>${nemesis.name}</td><td>$ingredients</td><td>$amountText</td></tr>"""
 
   private def createTooltip(nemesis: Archnemesis, extracted: Map[Archnemesis, Int]): String =
     val ingredients =
@@ -103,25 +104,33 @@ object Label:
         ""
       else //${nemesis.ingredients.map(_.name).mkString("<p>", "<br>", "</p>")}
         s"""
-        <h3 style="color:${Color.white.hexCode};margin-bottom: 3px">Ingredients</h3>
-        <table>
+        <tr><td colspan="3"><h3 style="color:${Color.white.hexCode};margin-bottom: 3px">Ingredients</h3></td></tr>
         ${nemesis.ingredients.map(nemesisWithColorAndAmount(_, extracted)).mkString}
-        </table>
           """
-    val usedToCraft =
-      if nemesis.ingredientForBest.isEmpty then
+    val craft =
+      if nemesis.ingredientFor.isEmpty then
         ""
       else
         s"""
-        <h3 style="color:${Color.white.hexCode};margin-bottom: 3px">Used for</h3>
-        <table>
-        ${nemesis.ingredientForBest.toList.sortBy(_.reward)(Ordering[Double].reverse).map(nemesisWithColorAndAmount(_, extracted)).mkString}
-        </table>
+        <tr><td colspan="3"><h3 style="color:${Color.white.hexCode};margin-bottom: 3px">Crafts</h3></td></tr>
+        ${nemesis.ingredientFor.sortBy(_.reward)(Ordering[Double].reverse).map(nemesisWithColorAndAmount(_, extracted)).mkString}
+        """
+    val indirectTopCrafts = nemesis.ingredientForBest -- nemesis.ingredientFor
+    val topCraft =
+      if indirectTopCrafts.isEmpty then
+        ""
+      else
+        s"""
+        <tr><td colspan="3"><h3 style="color:${Color.white.hexCode};margin-bottom: 3px">Top crafts</h3></td></tr>
+        ${indirectTopCrafts.toList.sortBy(_.reward)(Ordering[Double].reverse).map(nemesisWithColorAndAmount(_, extracted)).mkString}
         """
     s"""<html>
       <body style="padding: 0 5px 5px 5px;border: none">
+      <table>
       $ingredients
-      $usedToCraft
+      $craft
+      $topCraft
+      </table>
       </body>
       </html>"""
 

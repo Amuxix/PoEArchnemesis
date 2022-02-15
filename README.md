@@ -6,7 +6,8 @@ with picking which ones to use/craft.
 the zip from the latest version.
 2) Extract the zip.
 3) Open the bin folder
-4) Run `run.bat`
+4) Update configuration, if not on 1440p, see [configuration section](#configuration)
+5) Run `poe.bat`
 
 ## Keys
 By default the keys used are:
@@ -37,7 +38,7 @@ line is ful then start on the next line
 2) Mark the Archnemesis in the order they are in the inventory.
 3) Move mouse off the overlay for it close
 
-### Configuration
+## Configuration
 To parse the inventory this reads part of the screen, the coordinates of which are found in the configuration files.
 
 Two configs are provided for 1080p and 1440p, **1440p is the default one**, to change to 1080, open `application.conf` and on the last line replace 1440 with 1080
