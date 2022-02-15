@@ -32,6 +32,12 @@ jobs:
       - name: LS
         run: ls -lah
 
+      - name: LS target
+        run: ls -lah target
+
+      - name: LS target/universal
+        run: ls -lah target/universal
+
       - name: Update Release with Files
         uses: ncipollo/release-action@v1
         with:
@@ -42,4 +48,4 @@ jobs:
           name: ${{ github.event.release.name }}
           tag: ${{ github.event.release.tag_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: '.\PoEArchnemesis/target/universal/poe.zip'
+          artifacts: './target/universal/poe.zip'
