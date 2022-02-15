@@ -148,6 +148,7 @@ object Main extends IOApp.Simple:
 
   def showHelp(window: Window): IO[Unit] =
     for
+      _ <- IO(window.clear())
       _ <- helpLabels(window).traverse_(label => IO(window.add(label)))
       _ <- IO(window.show())
       _ <- IO(window.repaint())
@@ -156,14 +157,10 @@ object Main extends IOApp.Simple:
   private val sortedNemesis = Archnemesis.values.toList.sortBy(_.reward)(Ordering[Double].reverse)
   def showArchNemesis(window: Window): IO[Unit] =
     for
-      _ <- IO(window.clear())
+      extracted <- Extractor.extractAll.map(_.flatten)
       _ = toConsume = Set.empty
       _ = toCraft = Set.empty
       _ = toExtractMapping = List.empty
-      _ <- IO(window.add(Label(window.repaint, "Extracting Archnemesis...")))
-      _ <- IO(window.add(Label(window.repaint, " ")))
-      _ <- showHelp(window)
-      extracted <- Extractor.extractAll.map(_.flatten)
       extractedSet = extracted.toSet
       extractedMap = extracted.groupBy(identity).view.mapValues(_.size).toMap
       (craftable, nonCraftable) = sortedNemesis.map { nemesis =>
@@ -175,7 +172,7 @@ object Main extends IOApp.Simple:
         .partition(_._1)
       _ <- IO(window.clear())
       _ <- (craftable ++ nonCraftable).traverse_(_._2)
-      _ <- IO(window.repaint())
+      _ <- IO(window.show())
     yield ()
 
   given Codec[Color] = Codec.from(_.as[Int].map(new Color(_)), Encoder[Int].contramap[Color](_.getRGB))
@@ -189,7 +186,7 @@ object Main extends IOApp.Simple:
       _ <- IO(ToolTipManager.sharedInstance.setDismissDelay(Integer.MAX_VALUE))
       _ <- KeyListener.keyMap.update(_ ++ Map(
         config.keys.closeWindowKey -> IO(window.hide()),
-        config.keys.showHelpKey -> IO(window.clear()) *> showHelp(window),
+        config.keys.showHelpKey -> showHelp(window),
         config.keys.reopenKey -> IO(window.show()),
         config.keys.openAndParseKey -> showArchNemesis(window),
         NativeKeyEvent.VC_F5 -> Extractor.extractAll.flatMap(Extractor.printGrid),
